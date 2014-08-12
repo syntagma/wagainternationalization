@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src="https://code.jquery.com/jquery-1.9.1.js"></script>
+	</head>
+	<body>
+		<p>Elegir la salida, seleccionar el contenido, copiarlo y pegarlo en el nuevo archivo.</p>
+		<p id="cargando">Cargando...</p>
+		<div id="main" style="display:none;">
+			<select id="archivos">
+				<option value="0">en_US.json</option>
+				<option value="1">es_ES.json</option>
+				<option value="2">es_AR.json</option>
+                <option value="3">pt_BR.json</option>
+                <option value="4">nl_NL.json</option>
+			</select>
+			<pre id="file" style="width:100%;height:100%;border:1px solid black;font-family:'Courier New', Courier, monospace;font-size:12px; background-color:#FBF8EF;overflow:auto;padding:10px;">
+			</pre>
+		</div>
+		<script>
+			//Esta version usa la hoja 'Translation Table'
+			var archivos=[{},{},{},{},{}]
+			function getCSV(callback){
+				var url="https://docs.google.com/spreadsheet/pub?key=0AoJrnWb1uISJdHp5MXo0N2V4bllYTEdVTEFjUkhKOVE&single=true&gid=0&output=txt";
+				$.get(url,function(data){
+					var material=data.split("\n");
+					callback(material);
+				});
+			};
+			function parse(callback){
+				getCSV(function(data){
+					data.forEach(function(element,index){
+						if (index>1){ //Salteo los dos primeros registros.
+							var str = element.split("\t");
+							var key=str[2];
+							if (key.length>0){ //Si la key no estÃ¡ vacÃ­a..
+
+								//----Borro espacios en blanco si hay adelante y/o atrÃ¡s
+								if (key[0]==' ') {
+									console.log("|"+key+"|");
+									key=key.slice(0, 1);
+									console.log("->|"+key+"|");
+								};
+								if (key[key.length-1]==' ') {
+									console.log("|"+key+"|");
+									key=key.slice(0, -1);
+									console.log("->|"+key+"|");
+								};
+								//------------------------------------------------------
+
+								for (var position=0;position<5;position++){
+								 	archivos[position][key]=str[position+4];
+								};
+							};
+						};	
+					});
+					callback();
+				});
+			};
+			function loadSpread(){
+				parse (function(){
+					$("#file").width($(window).width()-50);
+					$("#file").height($(window).height()-130);
+					$("#cargando").hide();
+					$("#main").show();
+					$("#file").html(JSON.stringify(archivos[0],null, '\t'));
+					$("#archivos").on('change', function() {
+  						$("#file").html(JSON.stringify(archivos[this.value], null, '\t'));
+					});
+				});
+			};
+			window.onload=function(){
+				loadSpread();
+			};
+		</script>
+	</body>
+</html>
